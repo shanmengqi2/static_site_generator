@@ -2,24 +2,7 @@ from block_to_html import markdown_to_html_node
 from textnode import TextNode, TextType
 from leafnode import LeafNode
 import os
-
-# from markdown_extract import split_nodes_image, split_nodes_link
-
-# def text_node_to_html_node(text_node):
-#     if text_node.text_type == TextType.PLAIN:
-#         return LeafNode(None, text_node.text)
-#     elif text_node.text_type == TextType.BOLD:
-#         return LeafNode("b", text_node.text)
-#     elif text_node.text_type == TextType.ITALIC:
-#         return LeafNode("i", text_node.text)
-#     elif text_node.text_type == TextType.CODE:
-#         return LeafNode("code", text_node.text)
-#     elif text_node.text_type == TextType.LINK:
-#         return LeafNode("a", text_node.text, {"href": text_node.url})
-#     elif text_node.text_type == TextType.IMAGE:
-#         return LeafNode("img", "", {"src": text_node.url, "alt": text_node.text})
-#     else:
-#         raise ValueError(f"Invalid text type: {text_node.text_type}")
+import sys
 
 
 def copy_static_to_public():
@@ -32,7 +15,7 @@ def copy_static_to_public():
     project_root = os.path.dirname(current_dir)
 
     static_dir = os.path.join(project_root, "static")
-    public_dir = os.path.join(project_root, "public")
+    public_dir = os.path.join(project_root, "docs")
 
     # Delete all contents of public directory
     if os.path.exists(public_dir):
@@ -124,7 +107,7 @@ def extract_title(markdown):
     raise ValueError("No h1 header found in markdown")
 
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(
         f"Generating page from {from_path} to {dest_path} using {template_path}")
 
@@ -142,6 +125,10 @@ def generate_page(from_path, template_path, dest_path):
     template = template.replace("{{ Title }}", title)
     template = template.replace("{{ Content }}", html)
 
+    # replace href="/ with href="{basepath} src="/ with src="{basepath}
+    template = template.replace("href=\"/", f"href=\"{basepath}\"")
+    template = template.replace("src=\"/", f"src=\"{basepath}\"")
+
 # if dest not exits , create it
     if not os.path.exists(os.path.dirname(dest_path)):
         os.makedirs(os.path.dirname(dest_path))
@@ -151,13 +138,15 @@ def generate_page(from_path, template_path, dest_path):
 
 
 def main():
+    basepath = sys.argv[1] or "/"
     copy_static_to_public()
 
     # generate_page("content/index.md", "template.html", "public/index.html")
-    generate_pages_recursive("content", "template.html", "public")
+    generate_pages_recursive(
+        "content", "template.html", "docs", basepath)
 
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     """
     Recursively crawls the content directory and generates HTML pages for all markdown files.
 
@@ -183,14 +172,15 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
                 dest_path = os.path.join(dest_dir_path, dest_file)
 
                 # Generate the HTML page
-                generate_page(item_path, template_path, dest_path)
+                generate_page(item_path, template_path, dest_path, basepath)
 
         elif os.path.isdir(item_path):
             # Create corresponding subdirectory in destination
             dest_subdir = os.path.join(dest_dir_path, item)
 
             # Recursively process the subdirectory
-            generate_pages_recursive(item_path, template_path, dest_subdir)
+            generate_pages_recursive(
+                item_path, template_path, dest_subdir, basepath)
 
 
 if __name__ == "__main__":
