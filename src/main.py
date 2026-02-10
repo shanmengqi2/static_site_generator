@@ -126,8 +126,8 @@ def generate_page(from_path, template_path, dest_path, basepath):
     template = template.replace("{{ Content }}", html)
 
     # replace href="/ with href="{basepath} src="/ with src="{basepath}
-    template = template.replace("href=\"/", f"href=\"{basepath}\"")
-    template = template.replace("src=\"/", f"src=\"{basepath}\"")
+    template = template.replace("href=\"/", f"href=\"{basepath}")
+    template = template.replace("src=\"/", f"src=\"{basepath}")
 
 # if dest not exits , create it
     if not os.path.exists(os.path.dirname(dest_path)):
